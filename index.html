@@ -70,24 +70,54 @@
     button { background: var(--accent); color: black; font-weight: bold; border: none; }
     button:hover { background: #00c3cf; transform: translateY(-1px); }
     
+    /* NEW: Layout container for Canvas and Side Panel */
+    .workspace {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        max-width: 1200px;
+        width: 95%;
+        margin-bottom: 40px;
+        align-items: stretch;
+    }
+
     canvas {
         background: #000;
         border-radius: 8px;
         box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
         cursor: crosshair;
-        max-width: 100%;
+        flex-grow: 1;
+        max-width: 800px;
         height: auto;
     }
 
+    .side-panel {
+        background: var(--panel);
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 25px;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .side-panel h3 { margin-top: 0; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .side-panel p { font-size: 14px; margin-bottom: 10px; }
+    .axis-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 5px; }
+    .badge-x { background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid #ff4444; }
+    .badge-y { background: rgba(68, 255, 68, 0.2); color: #44ff44; border: 1px solid #44ff44; }
+    .badge-z { background: rgba(68, 68, 255, 0.2); color: #8888ff; border: 1px solid #8888ff; }
+
     .article {
         max-width: 800px;
-        margin: 40px 20px;
+        margin: 0 20px 40px 20px;
         padding: 30px;
         background: var(--panel);
         border-radius: 12px;
         border: 1px solid #333;
     }
-    .article h2 { color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px;}
+    .article h2 { color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 10px;}
     .article h3 { color: #fff; margin-top: 25px;}
     .article ul { color: var(--text-muted); line-height: 1.6; }
     .article li { margin-bottom: 10px; }
@@ -104,7 +134,7 @@
 <div class="toolbar">
     <div class="control-group">
         <label>Dimension / Physics</label>
-        <select id="dimensionMode">
+        <select id="dimensionMode" onchange="updateSidePanel()">
             <option value="2D">2D (Stable, Smooth)</option>
             <option value="3D">3D Slice (Simulate Mathematical Breakdown)</option>
         </select>
@@ -112,7 +142,7 @@
     
     <div class="control-group">
         <label>Initial Condition</label>
-        <select id="scenario">
+        <select id="scenario" onchange="updateSidePanel()">
             <option value="lid">Lid-Driven Cavity (Top moving)</option>
             <option value="jet">Central Ink Jet</option>
             <option value="vortex">Colliding Vortices</option>
@@ -126,7 +156,13 @@
     </div>
 </div>
 
-<canvas id="canvas" width="900" height="500"></canvas>
+<div class="workspace">
+    <canvas id="canvas" width="800" height="500"></canvas>
+    
+    <div class="side-panel" id="spatial-info">
+        <!-- Content injected by JS -->
+    </div>
+</div>
 
 <div class="article">
     <h2>What Are You Looking At?</h2>
@@ -134,8 +170,8 @@
     
     <h3>The Four Scenarios:</h3>
     <ul>
-        <li><strong>Lid-Driven Cavity:</strong> Imagine a square box full of water. The top wall is a treadmill moving constantly to the right. The friction from the top drags the fluid, creating a massive central swirl (vortex) and smaller secondary swirls in the bottom corners. This is a classic engineering test for fluid simulations.</li>
-        <li><strong>Central Ink Jet:</strong> Fluid is being blasted continuously from the bottom center into a stationary pool. Notice how the straight stream eventually wobbles and breaks apart into spinning curls. This is called Kelvin-Helmholtz instability.</li>
+        <li><strong>Lid-Driven Cavity:</strong> Imagine a square box full of water. The top wall is a treadmill moving constantly to the right. The friction from the top drags the fluid, creating a massive central swirl (vortex) and smaller secondary swirls in the bottom corners.</li>
+        <li><strong>Central Ink Jet:</strong> Fluid is being blasted continuously from the bottom center into a stationary pool. Notice how the straight stream eventually wobbles and breaks apart into spinning curls.</li>
         <li><strong>Colliding Vortices:</strong> Two spinning pools of fluid are placed side by side. Notice how they interact, deform each other, and merge. In 2D fluids, smaller swirls tend to combine into bigger ones.</li>
         <li><strong>Turbulent Noise:</strong> The simulation starts with completely random, chaotic movements everywhere. Over time, friction (viscosity) smooths out the tiny jitters, and larger, organized spinning structures emerge from the chaos.</li>
     </ul>
@@ -149,9 +185,6 @@
     <p>In <strong>3D (Real life)</strong>, fluid dynamics gets nasty due to a phenomenon called <strong>Vortex Stretching</strong>. Imagine a swirling tornado of water. If the currents around it pull the top and bottom of that tornado apart, it stretches out. Just like an ice skater pulling their arms in, a stretched vortex spins faster. It gets thinner and faster, stretching endlessly.</p>
 
     <p><strong>The Problem:</strong> The equations suggest that this vortex stretching could theoretically cascade into an infinitely thin, infinitely fast spinning point. If velocity reaches infinity, the math "blows up" (breaks down). The million-dollar question is: Does the natural friction (viscosity) of the fluid always stop this from happening, or do the equations actually allow for impossible, infinite velocities?</p>
-
-    <h3>What Happens in "3D Breakdown" Mode?</h3>
-    <p>If you switch the simulation to <strong>3D Slice (Simulate Mathematical Breakdown)</strong>, the code artificially introduces a mathematical feedback loop that mimics vortex stretching. Where the fluid spins, it injects more speed. Watch what happens: the fluid accelerates out of control, the energy cascades violently, and the numerical grid turns into a red, chaotic glitch. This visual explosion is what mathematicians fear might be hiding inside the 3D equations.</p>
 </div>
 
 <script>
@@ -175,10 +208,34 @@ let frameCount = 0;
 
 function I(x, y) { return x + y * NX; }
 
+function updateSidePanel() {
+    const dim = document.getElementById("dimensionMode").value;
+    const panel = document.getElementById("spatial-info");
+    
+    let html = `<h3>Spatial Context</h3>`;
+    
+    if (dim === "2D") {
+        html += `<p><strong>Current View:</strong> A perfectly flat 2D plane.</p>`;
+        html += `<p><span class="axis-badge badge-x">X Axis</span> Left to Right across the screen.</p>`;
+        html += `<p><span class="axis-badge badge-y">Y Axis</span> Bottom to Top of the screen.</p>`;
+        html += `<p style="margin-top: 15px; color: #44ff44;"><strong>Physics:</strong> The fluid is trapped on this surface. Because there is no depth (Z=0), vortices can only spin flatly. Energy is conserved smoothly.</p>`;
+    } else {
+        html += `<p><strong>Current View:</strong> A 2D cross-section sliced out of a 3D volume.</p>`;
+        html += `<p><span class="axis-badge badge-x">X Axis</span> Left to Right.</p>`;
+        html += `<p><span class="axis-badge badge-y">Y Axis</span> Bottom to Top.</p>`;
+        html += `<p><span class="axis-badge badge-z">Z Axis</span> Extending directly <strong>into and out of</strong> your monitor.</p>`;
+        html += `<p style="margin-top: 15px; color: #ff4444;"><strong>Physics:</strong> The simulation is artificially feeding energy into the X/Y plane where swirling occurs, mimicking fluid being stretched along the invisible Z-axis. Watch for the red breakdown!</p>`;
+    }
+    
+    panel.innerHTML = html;
+}
+
 function applyScenario() {
     scenario = document.getElementById("scenario").value;
     dimension = document.getElementById("dimensionMode").value;
     frameCount = 0;
+    
+    updateSidePanel();
     
     u.fill(0); v.fill(0);
     uOld.fill(0); vOld.fill(0);
@@ -314,6 +371,47 @@ function step() {
     applyBoundaries();
 }
 
+function drawAxes() {
+    ctx.lineWidth = 2;
+    ctx.font = "14px Arial";
+    
+    const ox = 30; // Origin X
+    const oy = canvas.height - 30; // Origin Y
+    const length = 50;
+
+    // Draw X Axis (Red)
+    ctx.strokeStyle = "#ff4444";
+    ctx.fillStyle = "#ff4444";
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + length, oy);
+    ctx.stroke();
+    ctx.fillText("X", ox + length + 8, oy + 5);
+
+    // Draw Y Axis (Green)
+    ctx.strokeStyle = "#44ff44";
+    ctx.fillStyle = "#44ff44";
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox, oy - length);
+    ctx.stroke();
+    ctx.fillText("Y", ox - 5, oy - length - 8);
+
+    // Draw Z Axis if in 3D Mode
+    if (dimension === "3D") {
+        ctx.strokeStyle = "#8888ff";
+        ctx.fillStyle = "#8888ff";
+        ctx.setLineDash([4, 4]); // Dashed line to indicate depth
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        // Angle down and left to represent coming "out" of the screen
+        ctx.lineTo(ox - length * 0.4, oy + length * 0.4); 
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset dash
+        ctx.fillText("Z", ox - length * 0.4 - 15, oy + length * 0.4 + 10);
+    }
+}
+
 function draw() {
     const img = ctx.createImageData(canvas.width, canvas.height);
     const data = img.data;
@@ -340,7 +438,10 @@ function draw() {
             }
         }
     }
-    ctx.putImageData(img,0,0);
+    ctx.putImageData(img, 0, 0);
+    
+    // Draw the spatial axes over the fluid
+    drawAxes();
 }
 
 let mouseDown = false;
