@@ -4,7 +4,7 @@
 
 ### An interactive visualization of fluid dynamics, turbulence, and the $1 Million Millennium Problem
 
-[**▶️ Launch the Interactive Simulation**](https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/)
+[**▶️ Launch the Interactive Simulation**]([https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/](https://soham0605.github.io/Navier-Stokes-visualization/))
 
 > Click, drag, experiment, and watch a mathematical equation turn into moving fluid.
 
