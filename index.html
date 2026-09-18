@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navier-Stokes Cinematic & The Millennium Problem</title>
+<style>
+    :root {
+        --bg: #0a0a0c;
+        --panel: #16161a;
+        --accent: #00f0ff;
+        --text: #e2e8f0;
+        --text-muted: #94a3b8;
+    }
+    body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+    }
+    .header {
+        text-align: center;
+        margin: 30px 20px 15px 20px;
+    }
+    h1 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: var(--accent);
+    }
+    p { margin: 0 0 15px 0; color: var(--text-muted); line-height: 1.6; }
+    
+    .toolbar {
+        background: var(--panel);
+        padding: 15px 25px;
+        border-radius: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #333;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+        max-width: 900px;
+    }
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
+    select, button {
+        background: #2a2a35;
+        color: white;
+        border: 1px solid #444;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        outline: none;
+        transition: 0.2s;
+    }
+    select:hover, button:hover { border-color: var(--accent); }
+    button { background: var(--accent); color: black; font-weight: bold; border: none; }
+    button:hover { background: #00c3cf; transform: translateY(-1px); }
+    
+    canvas {
+        background: #000;
+        border-radius: 8px;
+        box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
+        cursor: crosshair;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .article {
+        max-width: 800px;
+        margin: 40px 20px;
+        padding: 30px;
+        background: var(--panel);
+        border-radius: 12px;
+        border: 1px solid #333;
+    }
+    .article h2 { color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px;}
+    .article h3 { color: #fff; margin-top: 25px;}
+    .article ul { color: var(--text-muted); line-height: 1.6; }
+    .article li { margin-bottom: 10px; }
+    .article strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Navier-Stokes Cinematic</h1>
+    <p>Select initial conditions. Toggle 3D to watch the mathematics break.<br><i>Click and drag on the canvas to interact with the fluid.</i></p>
+</div>
+
+<div class="toolbar">
+    <div class="control-group">
+        <label>Dimension / Physics</label>
+        <select id="dimensionMode">
+            <option value="2D">2D (Stable, Smooth)</option>
+            <option value="3D">3D Slice (Simulate Mathematical Breakdown)</option>
+        </select>
+    </div>
+    
+    <div class="control-group">
+        <label>Initial Condition</label>
+        <select id="scenario">
+            <option value="lid">Lid-Driven Cavity (Top moving)</option>
+            <option value="jet">Central Ink Jet</option>
+            <option value="vortex">Colliding Vortices</option>
+            <option value="noise">Turbulent Noise</option>
+        </select>
+    </div>
+    
+    <div class="control-group">
+        <label>Action</label>
+        <button onclick="applyScenario()">Play / Restart</button>
+    </div>
+</div>
+
+<canvas id="canvas" width="900" height="500"></canvas>
+
+<div class="article">
+    <h2>What Are You Looking At?</h2>
+    <p>You are watching a real-time numerical solution to the <strong>Navier-Stokes equations</strong>, the fundamental laws of fluid dynamics. The colors you see represent "dye" or "ink" trapped in the fluid. The brighter and more vibrant the cyan/blue colors, the faster the fluid is moving in that area.</p>
+    
+    <h3>The Four Scenarios:</h3>
+    <ul>
+        <li><strong>Lid-Driven Cavity:</strong> Imagine a square box full of water. The top wall is a treadmill moving constantly to the right. The friction from the top drags the fluid, creating a massive central swirl (vortex) and smaller secondary swirls in the bottom corners. This is a classic engineering test for fluid simulations.</li>
+        <li><strong>Central Ink Jet:</strong> Fluid is being blasted continuously from the bottom center into a stationary pool. Notice how the straight stream eventually wobbles and breaks apart into spinning curls. This is called Kelvin-Helmholtz instability.</li>
+        <li><strong>Colliding Vortices:</strong> Two spinning pools of fluid are placed side by side. Notice how they interact, deform each other, and merge. In 2D fluids, smaller swirls tend to combine into bigger ones.</li>
+        <li><strong>Turbulent Noise:</strong> The simulation starts with completely random, chaotic movements everywhere. Over time, friction (viscosity) smooths out the tiny jitters, and larger, organized spinning structures emerge from the chaos.</li>
+    </ul>
+
+    <h2>The $1 Million Millennium Prize Problem</h2>
+    <p>The Navier-Stokes equations were written in the 1800s. We use them to design airplanes, predict the weather, and model ocean currents. They work incredibly well. But mathematically, we still don't fully understand them. The Clay Mathematics Institute has offered a <strong>$1,000,000 prize</strong> to anyone who can prove a specific property about them in 3D.</p>
+
+    <h3>The Difference Between 2D and 3D</h3>
+    <p>In <strong>2D (Flat space)</strong>, fluid is trapped on a plane. Swirls can only spin like coins on a table. The math here is "well-behaved." The energy stays manageable, and the equations always give a smooth, realistic answer.</p>
+
+    <p>In <strong>3D (Real life)</strong>, fluid dynamics gets nasty due to a phenomenon called <strong>Vortex Stretching</strong>. Imagine a swirling tornado of water. If the currents around it pull the top and bottom of that tornado apart, it stretches out. Just like an ice skater pulling their arms in, a stretched vortex spins faster. It gets thinner and faster, stretching endlessly.</p>
+
+    <p><strong>The Problem:</strong> The equations suggest that this vortex stretching could theoretically cascade into an infinitely thin, infinitely fast spinning point. If velocity reaches infinity, the math "blows up" (breaks down). The million-dollar question is: Does the natural friction (viscosity) of the fluid always stop this from happening, or do the equations actually allow for impossible, infinite velocities?</p>
+
+    <h3>What Happens in "3D Breakdown" Mode?</h3>
+    <p>If you switch the simulation to <strong>3D Slice (Simulate Mathematical Breakdown)</strong>, the code artificially introduces a mathematical feedback loop that mimics vortex stretching. Where the fluid spins, it injects more speed. Watch what happens: the fluid accelerates out of control, the energy cascades violently, and the numerical grid turns into a red, chaotic glitch. This visual explosion is what mathematicians fear might be hiding inside the 3D equations.</p>
+</div>
+
+<script>
+// ============================================================
+// SIMULATION CODE
+// ============================================================
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const NX = 120, NY = 66;
+const dx = 1.0, dt = 0.03, N = NX * NY;
+
+let u = new Float64Array(N), v = new Float64Array(N);
+let uOld = new Float64Array(N), vOld = new Float64Array(N);
+let pressure = new Float64Array(N);
+let dye = new Float64Array(N), dyeOld = new Float64Array(N);
+
+let scenario = "lid";
+let dimension = "2D";
+let frameCount = 0;
+
+function I(x, y) { return x + y * NX; }
+
+function applyScenario() {
+    scenario = document.getElementById("scenario").value;
+    dimension = document.getElementById("dimensionMode").value;
+    frameCount = 0;
+    
+    u.fill(0); v.fill(0);
+    uOld.fill(0); vOld.fill(0);
+    pressure.fill(0); dye.fill(0); dyeOld.fill(0);
+
+    if (scenario === "lid") {
+        for (let y = 30; y < 50; y++) {
+            for (let x = 40; x < 80; x++) dye[I(x,y)] = 1.0;
+        }
+    } 
+    else if (scenario === "vortex") {
+        for (let y = 10; y < NY-10; y++) {
+            for (let x = 10; x < NX-10; x++) {
+                let dx1 = x - 40, dy1 = y - 33;
+                let dx2 = x - 80, dy2 = y - 33;
+                let r1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+                let r2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+                
+                if (r1 < 15) { u[I(x,y)] = -dy1*0.2; v[I(x,y)] = dx1*0.2; dye[I(x,y)] = 1.0; }
+                if (r2 < 15) { u[I(x,y)] = dy2*0.2; v[I(x,y)] = -dx2*0.2; dye[I(x,y)] = 0.5; }
+            }
+        }
+    }
+    else if (scenario === "noise") {
+        for (let i = 0; i < N; i++) {
+            if (Math.random() > 0.5) {
+                u[i] = (Math.random() - 0.5) * 5;
+                v[i] = (Math.random() - 0.5) * 5;
+                dye[i] = Math.random();
+            }
+        }
+    }
+    applyBoundaries();
+}
+
+function applyBoundaries() {
+    for (let x = 0; x < NX; x++) {
+        u[I(x,0)] = 0; v[I(x,0)] = 0;
+        u[I(x,NY-1)] = scenario === "lid" ? 3.0 : 0; 
+        v[I(x,NY-1)] = 0;
+    }
+    for (let y = 0; y < NY; y++) {
+        u[I(0,y)] = 0; v[I(0,y)] = 0;
+        u[I(NX-1,y)] = 0; v[I(NX-1,y)] = 0;
+    }
+}
+
+function advect(field, oldField) {
+    for (let y = 1; y < NY-1; y++) {
+        for (let x = 1; x < NX-1; x++) {
+            let i = I(x,y);
+            let px = Math.max(1, Math.min(NX-2, x - u[i] * dt));
+            let py = Math.max(1, Math.min(NY-2, y - v[i] * dt));
+            let x0 = Math.floor(px), y0 = Math.floor(py);
+            let sx = px - x0, sy = py - y0;
+            
+            field[i] = (1-sx)*(1-sy)*oldField[I(x0,y0)] + sx*(1-sy)*oldField[I(x0+1,y0)] +
+                       (1-sx)*sy*oldField[I(x0,y0+1)] + sx*sy*oldField[I(x0+1,y0+1)];
+        }
+    }
+}
+
+function diffuse(field, oldField, viscosity) {
+    const alpha = viscosity * dt / (dx * dx);
+    for (let k = 0; k < 15; k++) {
+        for (let y = 1; y < NY-1; y++) {
+            for (let x = 1; x < NX-1; x++) {
+                let i = I(x,y);
+                field[i] = (oldField[i] + alpha * (field[I(x+1,y)] + field[I(x-1,y)] + field[I(x,y+1)] + field[I(x,y-1)])) / (1 + 4*alpha);
+            }
+        }
+    }
+    applyBoundaries();
+}
+
+function project() {
+    let div = new Float64Array(N);
+    for (let y = 1; y < NY-1; y++) {
+        for (let x = 1; x < NX-1; x++) {
+            div[I(x,y)] = -0.5 * (u[I(x+1,y)] - u[I(x-1,y)] + v[I(x,y+1)] - v[I(x,y-1)]) / dx;
+        }
+    }
+    pressure.fill(0);
+    for (let k = 0; k < 30; k++) {
+        for (let y = 1; y < NY-1; y++) {
+            for (let x = 1; x < NX-1; x++) {
+                pressure[I(x,y)] = (div[I(x,y)] + pressure[I(x+1,y)] + pressure[I(x-1,y)] + pressure[I(x,y+1)] + pressure[I(x,y-1)]) / 4;
+            }
+        }
+    }
+    for (let y = 1; y < NY-1; y++) {
+        for (let x = 1; x < NX-1; x++) {
+            u[I(x,y)] -= 0.5 * (pressure[I(x+1,y)] - pressure[I(x-1,y)]) / dx;
+            v[I(x,y)] -= 0.5 * (pressure[I(x,y+1)] - pressure[I(x,y-1)]) / dx;
+        }
+    }
+    applyBoundaries();
+}
+
+function step() {
+    frameCount++;
+    const visc = 0.005;
+
+    if (dimension === "3D" && frameCount > 100) {
+        for (let y = 1; y < NY-1; y++) {
+            for (let x = 1; x < NX-1; x++) {
+                let i = I(x,y);
+                let vort = (v[I(x+1,y)] - v[I(x-1,y)]) - (u[I(x,y+1)] - u[I(x,y-1)]);
+                if (Math.abs(vort) > 0.5) {
+                    u[i] *= 1.05; 
+                    v[i] *= 1.05;
+                }
+            }
+        }
+    }
+
+    if (scenario === "jet") {
+        for(let x = 55; x < 65; x++) {
+            u[I(x, 2)] = 0; v[I(x, 2)] = 10.0; dye[I(x, 2)] = 1.0;
+        }
+    }
+
+    uOld.set(u); vOld.set(v);
+    diffuse(u, uOld, visc); diffuse(v, vOld, visc);
+    project();
+    
+    uOld.set(u); vOld.set(v);
+    advect(u, uOld); advect(v, vOld);
+    project();
+    
+    dyeOld.set(dye); advect(dye, dyeOld);
+    for (let i = 0; i < N; i++) dye[i] *= 0.995; 
+    applyBoundaries();
+}
+
+function draw() {
+    const img = ctx.createImageData(canvas.width, canvas.height);
+    const data = img.data;
+    const sx = canvas.width / NX, sy = canvas.height / NY;
+
+    for (let y = 0; y < NY; y++) {
+        for (let x = 0; x < NX; x++) {
+            let i = I(x,y);
+            let d = isNaN(dye[i]) ? 1 : Math.min(1, Math.max(0, dye[i]));
+            let speed = isNaN(u[i]) ? 10 : Math.sqrt(u[i]*u[i] + v[i]*v[i]);
+
+            let r = Math.min(255, d * 180 + speed * 10);
+            let g = Math.min(255, d * 50 + speed * 30);
+            let b = Math.min(255, d * 255 + speed * 40);
+
+            if (dimension === "3D" && speed > 50) { r = 255; g = 0; b = 0; }
+
+            let px0 = Math.floor(x*sx), py0 = Math.floor(canvas.height - (y+1)*sy);
+            for (let py = py0; py < py0 + sy; py++) {
+                for (let px = px0; px < px0 + sx; px++) {
+                    let p = 4 * (px + py*canvas.width);
+                    data[p] = r; data[p+1] = g; data[p+2] = b; data[p+3] = 255;
+                }
+            }
+        }
+    }
+    ctx.putImageData(img,0,0);
+}
+
+let mouseDown = false;
+canvas.addEventListener("mousedown", () => mouseDown = true);
+canvas.addEventListener("mouseup", () => mouseDown = false);
+canvas.addEventListener("mousemove", e => {
+    if (!mouseDown) return;
+    const rect = canvas.getBoundingClientRect();
+    let x = Math.floor((e.clientX - rect.left) / canvas.width * NX);
+    let y = Math.floor((1 - (e.clientY - rect.top) / canvas.height) * NY);
+    
+    for (let yy = -2; yy <= 2; yy++) {
+        for (let xx = -2; xx <= 2; xx++) {
+            let gx = x + xx, gy = y + yy;
+            if (gx > 1 && gx < NX-2 && gy > 1 && gy < NY-2) {
+                let i = I(gx,gy);
+                u[i] += 2.0; v[i] += 2.0; dye[i] = 1;
+            }
+        }
+    }
+});
+
+function animate() {
+    for (let n = 0; n < 2; n++) step();
+    draw();
+    requestAnimationFrame(animate);
+}
+
+applyScenario();
+animate();
+</script>
+</body>
+</html>
